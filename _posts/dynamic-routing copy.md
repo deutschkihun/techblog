@@ -6,7 +6,7 @@ date: "2020-03-16T05:35:07.322Z"
 author:
   name: Kihun Kim (deutschkihun)
   picture: "/assets/blog/authors/kihun.jpg"
-sogImage:
+ogImage:
   url: "/assets/blog/dynamic-routing/cover.jpg"
 ---
 
