@@ -1,4 +1,4 @@
-# Tech blog for software engineering by deutschkihun
+# techblog.deutschkihun
 
 This repository is a source code for tech blog application by deutschkihun. This project is based on the react and next.js framework.
 
