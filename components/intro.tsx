@@ -5,7 +5,7 @@ const Intro = () => {
         techblog.deutschkihun
       </h1>
       <h4 className="text-center md:text-left text-lg mt-5 md:pl-8">
-        A statically generated blog using Next.js and Markdown.
+        A statically generated tech blog using Next.js and Markdown.
       </h4>
     </section>
   );
