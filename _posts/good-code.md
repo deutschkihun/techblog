@@ -1,0 +1,153 @@
+---
+title: "좋은 코드란 무엇인가?"
+excerpt: "개발자들 간에 좋은 코드를 정의하는 방식은 각양각색이다. 좋은 코드란 것에 대한 정답은 없다고 생각한다. 다만 오답은 존재한다고 생각하는데 가장 근본적으로 좋은 코드를 쓰려면 오답들을 피하는 것이 가장 좋다고 생각한다. 이 포스팅에서 어떠한 방식으로 오답을 피하여 재사용성이 높고 범용성이 넓은 좋은 코드를 작성 할 수 있는지 필자의 생각을 정리해 보았다."
+coverImage: "/assets/blog/good-code/cover.jpg"
+date: "2022-08-26T05:35:07.322Z"
+author:
+  name: Kihun Kim (deutschkihun)
+  picture: "/assets/blog/authors/kihun.jpg"
+ogImage:
+  url: "/assets/blog/good-code/cover.jpg"
+---
+
+개발자들 간에 좋은 코드를 정의하는 방식은 각양각색이다. 좋은 코드란 것에 대한 정답은 없다고 생각한다. 다만 오답은 존재한다고 생각하는데 가장 근본적으로 좋은 코드를 쓰려면 오답들을 피하는 것이 가장 좋다고 생각한다. 이 포스팅에서 어떠한 방식으로 오답을 피하여 재사용성이 높고 범용성이 넓은 좋은 코드를 작성 할 수 있는지 필자의 생각을 정리해 보았다.
+
+## 1. 추출이 아닌 추상화
+
+추출과 추상화를 혼동해서 사용하는 경우가 종종 있는데 엄연히 말하자면 둘은 각각 다른 의미를 가진다. 단순히 반복되는 코드를 줄이기 위해 코드의 실행 순서와 의존성을 고려하지 않고 코드 덩이리(chunk) 를 뽑아내는 것은 좋지 않은 코드라고 말할 수 있다.
+
+- **추출** (extract): 특별한 기준 없이 단순히 밖으로 코드를 끌어내는 것을 의미한다.
+- **추상화** (abstract): 단순히 코드를 끌어내는 것이 아닌, 어떤 대상 혹은 객체가 지니고 있는 중요한 특징/요점들을 **재해석**하여 뽑아내는 것을 의미한다.
+
+### **좋은 코드를 쓰기 위해서는 의존성을 드러내기 위한 추상화를 해야한다.**
+
+우리가 별도 함수 또는 파일로 추출하는 이유는 여러 가지가 있다. 다른 곳에서 재사용하기 위해 분리하고 단지 파일이 커져서 분리한다. 단순히 중복된 코드 덩어리(chunk)에 대해 추출하면 재사용하기 어렵다. 오히려 함수 간 의존 관계를 파악하기 위해 비용이 들어가게 된다. 잘못 추출한 것이라고 말할 수 있다. 함수를 분리할 때는 그 함수의 역할을 인지하고 하나의 역할만 하도록 선언 해주는 것이 매우 중요하다. 그러지 않으면 나중에 서비스가 거대해지고 의존성이 얽히고 설키는 순간 외부로 분리해놓은 코드 덩어리 어떠한 기능을 담당하는지 파악하기 어려워진다. **즉 의존성을 드러내기 위함이 추출의 목적이 되어야 한다**. 한 파일에 여러 로직이 얽혀있을 때 각 코드 조각 중 서로 의존 관계에 있는 것들을 추출해야 한다. 이렇게 추상화가 된 함수는 하나의 목적(역할)을 갖게 되고 **의미 있는 추출(추상화)** 이 이루어진다.
+
+```tsx
+const Mixing = () => {
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(10);
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handlePage = () => {};
+  const fetchData = async () => {
+    fetch(Page);
+  };
+
+  useEffect(() => {
+    // data fetch
+  }, []);
+
+  return <Component> ... </Component>;
+};
+```
+
+예를 들어 위와 같이 pagination 과 fetch 를 하는 기능을 모두 포함하고 있는 컴포넌트가 있다고 가정해보자. 만약 이 컴포넌트를 재사용하기 위해 단순히 이 컴포넌트 전체를 외부 폴더로 빼서 사용하면 좋은코드라고 말할 수 있을까?
+
+```tsx
+const useMixingData = () => {
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(10);
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handlePage = () => {}
+  const fetchData = async () => {
+    return await fetch(Page)
+  }
+
+  useEffect(() => {
+    // data fetch
+  },[])
+
+  return {
+    paeg,adata,isLoading,isError,handlePage,
+  }
+};
+
+const Mixing = () => {
+  const { data } = useMixingData(1,fetchData)
+
+  return ( ... )
+}
+```
+
+리액트의 경우 위와 같이 custom hook 을 이용해서 외부로 뺴게 되면 재사용 할 수 있는 컴포넌트로 만들 수 있다. 우선 컴포넌트 자체는 간결해졌다고 말할 수 있다. 그러나 이 custom hooks 은 여러가지 일을 하고 있다보니 이름을 정하는 것 부터 쉽지않다. 또한 서로다른 기능을 수행하는 인자를 여러개 받기 때문에 만약 해당 컴포넌트 코드에 새로운 변경이 추가되거나 api 응답값에 따라 인자를 바꿔줘야 하는 경우라면 추가적으로 새로운 로직을 구성하는 것이 불가피해진다.
+
+### **즉 의존성을 고려하지 않고 추출을 하게 되면 재사용성 높은 좋은 코드를 쓰기 어렵다.**
+
+이번에는 의존성이 높은 것 끼리 추상화를 하여 코드를 정리해보겠습니다. 위의 예시에서 의존성이 높은 것끼리 추상화를 하려면 pagination 기능만 담당하는 함수 1개, 그리고 fetching 을 담당하는 함수 1개로 나누어서 추상화를 해주는 것이 바람직하다.
+
+자고로 재사용의 목적으로 만든 함수라면 그 함수는 오로지 1개의 기능만 담당하는 것이 의존성 높은 추상화를 하는데 가장 중요한 원칙이라고 생각한다.
+
+```tsx
+const usePagination = (initialPage: number) => {
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(10);
+
+  const handlePage = () => {};
+
+  return { page, totalPage };
+};
+```
+
+```tsx
+const useFetch = <T,>(fetchFunction: () => Promise<T>, initialValue = null) => {
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // data fetch
+  }, []);
+
+  return { data, isLoading };
+};
+```
+
+이런식으로 각각 의존성 있는 것끼리 묶어서 재사용할 수 있게 코드를 분리 해 놓으면 더 좋은 코드를 작성 할 수 있다.
+
+## 2. 일관성 있는 코드
+
+최소한의 가독성을 보장하기 위해서는 일관성 있는 코드를 작성하는 것이 중요하다. 일관성은 같이 작업하는 개발자 혹은 동료들과 **합의된 규칙**을 기반으로 만들어진다.
+
+### 2.1 네이밍 (naming)
+
+코드를 작성 할 때 항상 고민이 되는 것 중에 하나가 바로 네이밍을 하는 것이다. 함수,클래스,변수 등에 이름을 정하는 것은 사실 쉬운일 인거 같지만 다른 한편으로는 어려운 일이다. 필자는 지금까지 다른 개발자들과 일하면서 자기 자신이 네이밍을 잘한다고 말하는 개발자를 본적이 없을 정도로 항상 이름을 정하는데에 자신이 없는 것 같다. (물론 필자 또한 네이밍 할 때 고민을 많이 한다.)
+
+예를들어 react 에서는 hook 을 사용할 때 use- 이라는 prefix를 사용한다. 이렇게 convention (관습) 을 가지고 작성하는 것은 다른 개발자와 협업을 할 때 도움이 많이 된다. 단순히 이벤트 핸들러를 정의할 때도 convention을 지켜서 정의한다면 해당하는 convention의 함수를 보면 이벤트 핸들러라는 예상이 가능해진다.
+
+#### 이벤트 핸들러 규칙: prefix / action / target
+
+이벤트 핸들러 작성 할 때 일반적으로 위와 같은 규칙을 많이 사용한다.
+
+```tsx
+// prefix: on
+// action: click
+// target: button
+
+const onClickButton = () => {...}
+```
+
+#### 네이밍 규칙: 시작은 소문자, 단어들은 camel case
+
+일반적으로 네이밍 대상의 철자는 소문자로 시작하며 단어와 단어를 구분짓기 위해 camel case 를 많이 사용한다. 혹시라고 camel case 가 뭔지 모른다면 [여기](https://khalilstemmler.com/blogs/camel-case-snake-case-pascal-case/#Camel-case)를 참고하시길 바랍니다.
+
+### 2.2 디렉터리 구조
+
+디렉터리 구조는 작성한 코드들은 어디에 저장하고 관리 할 것인지를 결정해준다. 서비스의 크기가 커지면 커질수록 파일의 갯수가 많아 질 수 밖에 없기 때문에 디렉테리 구조를 잘 짜는 것은 필요한 파일의 위치를 빠르게 찾아내는데에 많은 도움이 되고 좋은 코드를 쓰는 방법중에 하나라고 필자는 생각한다. 다만 디렉터리 구조와 아키텍처는 비교 대상이 아니다. **[(아키텍처 !==디렉터리구조)](https://techblog-deutschkihun.vercel.app/posts/architecture)**
+
+```
+| src
+| -- api
+| -- component
+| -- hooks
+| -- contexts
+| -- model
+| -- pages
+|    | -- contract
+|    | -- docs
+| -- utils
+```
+
+이러한 방식으로 필요와 목적에 따라 디렉터리 구조를 짜고 각각의 폴더 안에 알맞는 파일을 저장해두면 구조를 파악하고 원하는 파일을 빠르게 찾는데 도움이 된다.
