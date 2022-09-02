@@ -4,9 +4,6 @@ const Intro = () => {
       <h1 className="text-5xl md:text-8xl font-bold tracking-tighter leading-tight md:pr-8">
         techblog.deutschkihun
       </h1>
-      <h4 className="text-center md:text-left text-lg mt-5 md:pl-8">
-        A statically generated tech blog using Next.js and Markdown.
-      </h4>
     </section>
   );
 };
